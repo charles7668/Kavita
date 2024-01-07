@@ -2,11 +2,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges
 import {CommonModule} from "@angular/common";
 import {SafeHtmlPipe} from "../../_pipes/safe-html.pipe";
 import {TranslocoDirective} from "@ngneat/transloco";
+import DOMPurify from 'dompurify';
+import {BypassSecurityTrustHtmlPipe} from "../../_pipes/bypass-security-trust-html.pipe";
 
 @Component({
   selector: 'app-read-more',
   standalone: true,
-  imports: [CommonModule, SafeHtmlPipe, TranslocoDirective],
+  imports: [CommonModule, SafeHtmlPipe, TranslocoDirective, BypassSecurityTrustHtmlPipe],
   templateUrl: './read-more.component.html',
   styleUrls: ['./read-more.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -41,19 +43,20 @@ export class ReadMoreComponent implements OnChanges {
   }
 
   determineView() {
+    let safeHtml = DOMPurify.sanitize(this.text);
     if (!this.text || this.text.length <= this.maxLength) {
-        this.currentText = this.text;
+        this.currentText = safeHtml;
         this.isCollapsed = true;
         this.hideToggle = true;
         return;
     }
     this.hideToggle = false;
     if (this.isCollapsed) {
-      this.currentText = this.text.substring(0, this.maxLength);
+      this.currentText = safeHtml.substring(0, this.maxLength);
       this.currentText = this.currentText.substring(0, Math.min(this.currentText.length, this.currentText.lastIndexOf(' ')));
       this.currentText = this.currentText + '…';
     } else if (!this.isCollapsed)  {
-      this.currentText = this.text;
+      this.currentText = safeHtml;
     }
 
     this.cdRef.markForCheck();
